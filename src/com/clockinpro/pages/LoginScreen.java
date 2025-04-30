@@ -62,11 +62,11 @@ public class LoginScreen {
                 // Navigate based on user role
                 Scene scene;
                 if (controller.getLoggedInEmployee().isAdmin()) {
-                    AdminDashboardScreen adminScreen = new AdminDashboardScreen();
+                    AdminDashboardScreen adminScreen = new AdminDashboardScreen(primaryStage);
                     scene = new Scene(adminScreen.getView(), 1000, 600);
                     primaryStage.setTitle("ClockInPro - Admin Dashboard");
                 } else {
-                    ClockInOutScreen clockInOutScreen = new ClockInOutScreen(controller.getLoggedInEmployee());
+                    ClockInOutScreen clockInOutScreen = new ClockInOutScreen(controller.getLoggedInEmployee(), primaryStage);
                     scene = new Scene(clockInOutScreen.getView(), 800, 600);
                     primaryStage.setTitle("ClockInPro - Clock In/Out");
                 }

@@ -30,4 +30,8 @@ public class LoginController {
     public Employee getLoggedInEmployee() {
         return loggedInEmployee;
     }
+
+    public void clearLoggedInEmployee() {
+        loggedInEmployee = null;
+    }
 }

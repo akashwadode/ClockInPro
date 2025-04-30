@@ -7,10 +7,13 @@ import com.clockinpro.models.Employee.PayrollRecord;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import java.time.LocalDateTime;
 
@@ -20,8 +23,10 @@ public class AdminDashboardScreen {
     private TableView<Employee> employeeTable;
     private TableView<TimeRecord> timeRecordTable;
     private TableView<PayrollRecord> payrollTable;
+    private Stage primaryStage;
 
-    public AdminDashboardScreen() {
+    public AdminDashboardScreen(Stage primaryStage) {
+        this.primaryStage = primaryStage;
         view = new BorderPane();
         initializeUI();
     }
@@ -75,6 +80,21 @@ public class AdminDashboardScreen {
             }
         });
 
+        // Logout button
+        Button logoutButton = new Button("Logout");
+        logoutButton.getStyleClass().add("primary-button");
+        logoutButton.setOnAction(e -> {
+            LoginScreen loginScreen = new LoginScreen(primaryStage);
+            Scene scene = new Scene(loginScreen.getView(), 600, 400);
+            scene.getStylesheets().add(getClass().getResource("/styles/main.css").toExternalForm());
+            primaryStage.setTitle("ClockInPro - Login");
+            primaryStage.setScene(scene);
+        });
+
+        HBox buttonBox = new HBox(10, logoutButton);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.setPadding(new Insets(10));
+
         // Layout
         VBox employeeBox = new VBox(10, new Label("All Employees"), employeeTable);
         employeeBox.setPadding(new Insets(20));
@@ -83,6 +103,7 @@ public class AdminDashboardScreen {
         VBox payrollBox = new VBox(10, new Label("Selected Employee Payroll Records"), payrollTable);
         payrollBox.setPadding(new Insets(20));
 
+        view.setTop(buttonBox);
         view.setLeft(employeeBox);
         view.setCenter(timeRecordBox);
         view.setRight(payrollBox);

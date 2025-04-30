@@ -8,10 +8,13 @@ import com.clockinpro.utils.AlertUtil;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -24,9 +27,11 @@ public class ClockInOutScreen {
     private Employee employee;
     private TableView<TimeRecord> timeTable;
     private TableView<PayrollRecord> payrollTable;
+    private Stage primaryStage;
 
-    public ClockInOutScreen(Employee employee) {
+    public ClockInOutScreen(Employee employee, Stage primaryStage) {
         this.employee = employee;
+        this.primaryStage = primaryStage;
         view = new BorderPane();
         initializeUI();
     }
@@ -78,7 +83,21 @@ public class ClockInOutScreen {
             }
         });
 
-        VBox formBox = new VBox(10, dateLabel, datePicker, clockInLabel, clockInField, clockOutLabel, clockOutField, submitButton);
+        // Logout button
+        Button logoutButton = new Button("Logout");
+        logoutButton.getStyleClass().add("primary-button");
+        logoutButton.setOnAction(e -> {
+            LoginScreen loginScreen = new LoginScreen(primaryStage);
+            Scene scene = new Scene(loginScreen.getView(), 600, 400);
+            scene.getStylesheets().add(getClass().getResource("/styles/main.css").toExternalForm());
+            primaryStage.setTitle("ClockInPro - Login");
+            primaryStage.setScene(scene);
+        });
+
+        HBox buttonBox = new HBox(10, submitButton, logoutButton);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        VBox formBox = new VBox(10, dateLabel, datePicker, clockInLabel, clockInField, clockOutLabel, clockOutField, buttonBox);
         formBox.setAlignment(Pos.CENTER);
         formBox.setPadding(new Insets(20));
 
