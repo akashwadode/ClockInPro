@@ -33,7 +33,7 @@ public class LoginScreen {
         // Logo
         ImageView logoView = null;
         try {
-            InputStream imageStream = getClass().getResourceAsStream("/logo.png");
+            InputStream imageStream = getClass().getResourceAsStream("/images/logo.png");
             if (imageStream == null) {
                 System.err.println("Warning: logo.png not found in resources/images/");
             } else {
@@ -59,11 +59,18 @@ public class LoginScreen {
         loginButton.setOnAction(e -> {
             if (controller.authenticate(usernameField, passwordField)) {
                 AlertUtil.showInfo("Success", "Login successful!");
-                // Navigate to ClockInOutScreen
-                ClockInOutScreen clockInOutScreen = new ClockInOutScreen(controller.getLoggedInEmployee());
-                Scene scene = new Scene(clockInOutScreen.getView(), 800, 600);
+                // Navigate based on user role
+                Scene scene;
+                if (controller.getLoggedInEmployee().isAdmin()) {
+                    AdminDashboardScreen adminScreen = new AdminDashboardScreen();
+                    scene = new Scene(adminScreen.getView(), 1000, 600);
+                    primaryStage.setTitle("ClockInPro - Admin Dashboard");
+                } else {
+                    ClockInOutScreen clockInOutScreen = new ClockInOutScreen(controller.getLoggedInEmployee());
+                    scene = new Scene(clockInOutScreen.getView(), 800, 600);
+                    primaryStage.setTitle("ClockInPro - Clock In/Out");
+                }
                 scene.getStylesheets().add(getClass().getResource("/styles/main.css").toExternalForm());
-                primaryStage.setTitle("ClockInPro - Clock In/Out");
                 primaryStage.setScene(scene);
             }
         });

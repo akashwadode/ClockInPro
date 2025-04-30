@@ -1,4 +1,3 @@
-
 package com.clockinpro.database;
 
 import com.clockinpro.models.Employee;
@@ -49,7 +48,12 @@ public class DBUtil {
             stmt.setString(2, password);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return new Employee(rs.getInt("id"), rs.getString("username"), rs.getString("password"));
+                return new Employee(
+                        rs.getInt("id"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getBoolean("is_admin")
+                );
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -90,5 +94,26 @@ public class DBUtil {
             e.printStackTrace();
         }
         return records;
+    }
+
+    public static List<Employee> getAllEmployees() {
+        List<Employee> employees = new ArrayList<>();
+        String query = "SELECT * FROM employees";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Employee employee = new Employee(
+                        rs.getInt("id"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getBoolean("is_admin")
+                );
+                employees.add(employee);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return employees;
     }
 }

@@ -6,11 +6,13 @@ public class Employee {
     private int id;
     private String username;
     private String password;
+    private boolean isAdmin;
 
-    public Employee(int id, String username, String password) {
+    public Employee(int id, String username, String password, boolean isAdmin) {
         this.id = id;
         this.username = username;
         this.password = password;
+        this.isAdmin = isAdmin;
     }
 
     public int getId() {
@@ -19,6 +21,10 @@ public class Employee {
 
     public String getUsername() {
         return username;
+    }
+
+    public boolean isAdmin() {
+        return isAdmin;
     }
 
     // Time Record inner class
