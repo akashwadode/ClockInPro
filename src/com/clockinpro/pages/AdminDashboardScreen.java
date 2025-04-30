@@ -3,6 +3,7 @@ package com.clockinpro.pages;
 import com.clockinpro.database.DBUtil;
 import com.clockinpro.models.Employee;
 import com.clockinpro.models.Employee.TimeRecord;
+import com.clockinpro.models.Employee.PayrollRecord;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -18,6 +19,7 @@ public class AdminDashboardScreen {
     private BorderPane view;
     private TableView<Employee> employeeTable;
     private TableView<TimeRecord> timeRecordTable;
+    private TableView<PayrollRecord> payrollTable;
 
     public AdminDashboardScreen() {
         view = new BorderPane();
@@ -31,11 +33,11 @@ public class AdminDashboardScreen {
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         TableColumn<Employee, String> usernameCol = new TableColumn<>("Username");
         usernameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
-        TableColumn<Employee, Boolean> adminCol = new TableColumn<>("Is Admin");
-        adminCol.setCellValueFactory(new PropertyValueFactory<>("admin"));
-        employeeTable.getColumns().addAll(idCol, usernameCol, adminCol);
+        TableColumn<Employee, Double> hourlyRateCol = new TableColumn<>("Hourly Rate");
+        hourlyRateCol.setCellValueFactory(new PropertyValueFactory<>("hourlyRate"));
+        employeeTable.getColumns().addAll(idCol, usernameCol, hourlyRateCol);
 
-        // Load employees
+        // Load employees (excludes admins)
         employeeTable.setItems(FXCollections.observableArrayList(DBUtil.getAllEmployees()));
 
         // Time Record Table
@@ -50,12 +52,26 @@ public class AdminDashboardScreen {
         hoursCol.setCellValueFactory(new PropertyValueFactory<>("hoursWorked"));
         timeRecordTable.getColumns().addAll(empIdCol, clockInCol, clockOutCol, hoursCol);
 
-        // Update time records when an employee is selected
+        // Payroll Table
+        payrollTable = new TableView<>();
+        TableColumn<PayrollRecord, Integer> payrollIdCol = new TableColumn<>("Payroll ID");
+        payrollIdCol.setCellValueFactory(new PropertyValueFactory<>("id"));
+        TableColumn<PayrollRecord, Integer> timeRecordIdCol = new TableColumn<>("Time Record ID");
+        timeRecordIdCol.setCellValueFactory(new PropertyValueFactory<>("timeRecordId"));
+        TableColumn<PayrollRecord, Double> payrollHoursCol = new TableColumn<>("Hours Worked");
+        payrollHoursCol.setCellValueFactory(new PropertyValueFactory<>("hoursWorked"));
+        TableColumn<PayrollRecord, Double> amountCol = new TableColumn<>("Amount Paid");
+        amountCol.setCellValueFactory(new PropertyValueFactory<>("amountPaid"));
+        payrollTable.getColumns().addAll(payrollIdCol, timeRecordIdCol, payrollHoursCol, amountCol);
+
+        // Update time and payroll records when an employee is selected
         employeeTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
                 timeRecordTable.setItems(FXCollections.observableArrayList(DBUtil.getTimeRecords(newSelection.getId())));
+                payrollTable.setItems(FXCollections.observableArrayList(DBUtil.getPayrollRecords(newSelection.getId())));
             } else {
                 timeRecordTable.setItems(FXCollections.observableArrayList());
+                payrollTable.setItems(FXCollections.observableArrayList());
             }
         });
 
@@ -64,9 +80,12 @@ public class AdminDashboardScreen {
         employeeBox.setPadding(new Insets(20));
         VBox timeRecordBox = new VBox(10, new Label("Selected Employee Time Records"), timeRecordTable);
         timeRecordBox.setPadding(new Insets(20));
+        VBox payrollBox = new VBox(10, new Label("Selected Employee Payroll Records"), payrollTable);
+        payrollBox.setPadding(new Insets(20));
 
         view.setLeft(employeeBox);
         view.setCenter(timeRecordBox);
+        view.setRight(payrollBox);
         view.setAlignment(view, Pos.CENTER);
     }
 

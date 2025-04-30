@@ -2,6 +2,7 @@ package com.clockinpro.database;
 
 import com.clockinpro.models.Employee;
 import com.clockinpro.models.Employee.TimeRecord;
+import com.clockinpro.models.Employee.PayrollRecord;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +53,8 @@ public class DBUtil {
                         rs.getInt("id"),
                         rs.getString("username"),
                         rs.getString("password"),
-                        rs.getBoolean("is_admin")
+                        rs.getBoolean("is_admin"),
+                        rs.getDouble("hourly_rate")
                 );
             }
         } catch (SQLException e) {
@@ -61,15 +63,29 @@ public class DBUtil {
         return null;
     }
 
-    public static void saveTimeRecord(TimeRecord record) {
-        String query = "INSERT INTO time_records (employee_id, clock_in, clock_out, hours_worked) VALUES (?, ?, ?, ?)";
+    public static void saveTimeRecord(TimeRecord record, double hourlyRate) {
+        String timeQuery = "INSERT INTO time_records (employee_id, clock_in, clock_out, hours_worked) VALUES (?, ?, ?, ?)";
         try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, record.getEmployeeId());
-            stmt.setTimestamp(2, Timestamp.valueOf(record.getClockIn()));
-            stmt.setTimestamp(3, Timestamp.valueOf(record.getClockOut()));
-            stmt.setDouble(4, record.getHoursWorked());
-            stmt.executeUpdate();
+             PreparedStatement timeStmt = conn.prepareStatement(timeQuery, Statement.RETURN_GENERATED_KEYS)) {
+            timeStmt.setInt(1, record.getEmployeeId());
+            timeStmt.setTimestamp(2, Timestamp.valueOf(record.getClockIn()));
+            timeStmt.setTimestamp(3, Timestamp.valueOf(record.getClockOut()));
+            timeStmt.setDouble(4, record.getHoursWorked());
+            timeStmt.executeUpdate();
+
+            // Get the generated time record ID
+            ResultSet rs = timeStmt.getGeneratedKeys();
+            if (rs.next()) {
+                int timeRecordId = rs.getInt(1);
+                // Save payroll record
+                String payrollQuery = "INSERT INTO payroll (employee_id, time_record_id, hours_worked) VALUES (?, ?, ?)";
+                try (PreparedStatement payrollStmt = conn.prepareStatement(payrollQuery)) {
+                    payrollStmt.setInt(1, record.getEmployeeId());
+                    payrollStmt.setInt(2, timeRecordId);
+                    payrollStmt.setDouble(3, record.getHoursWorked());
+                    payrollStmt.executeUpdate();
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -98,7 +114,7 @@ public class DBUtil {
 
     public static List<Employee> getAllEmployees() {
         List<Employee> employees = new ArrayList<>();
-        String query = "SELECT * FROM employees";
+        String query = "SELECT * FROM employees WHERE is_admin = FALSE";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             ResultSet rs = stmt.executeQuery();
@@ -107,7 +123,8 @@ public class DBUtil {
                         rs.getInt("id"),
                         rs.getString("username"),
                         rs.getString("password"),
-                        rs.getBoolean("is_admin")
+                        rs.getBoolean("is_admin"),
+                        rs.getDouble("hourly_rate")
                 );
                 employees.add(employee);
             }
@@ -115,5 +132,31 @@ public class DBUtil {
             e.printStackTrace();
         }
         return employees;
+    }
+
+    public static List<PayrollRecord> getPayrollRecords(int employeeId) {
+        List<PayrollRecord> records = new ArrayList<>();
+        String query = "SELECT p.id, p.employee_id, p.time_record_id, p.hours_worked, (p.hours_worked * e.hourly_rate) AS amount_paid " +
+                "FROM payroll p " +
+                "JOIN employees e ON p.employee_id = e.id " +
+                "WHERE p.employee_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, employeeId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                PayrollRecord record = new PayrollRecord(
+                        rs.getInt("id"),
+                        rs.getInt("employee_id"),
+                        rs.getInt("time_record_id"),
+                        rs.getDouble("hours_worked"),
+                        rs.getDouble("amount_paid")
+                );
+                records.add(record);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return records;
     }
 }

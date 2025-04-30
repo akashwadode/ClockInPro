@@ -3,6 +3,7 @@ package com.clockinpro.pages;
 import com.clockinpro.database.DBUtil;
 import com.clockinpro.models.Employee;
 import com.clockinpro.models.Employee.TimeRecord;
+import com.clockinpro.models.Employee.PayrollRecord;
 import com.clockinpro.utils.AlertUtil;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -21,7 +22,8 @@ public class ClockInOutScreen {
 
     private BorderPane view;
     private Employee employee;
-    private TableView<TimeRecord> table; // Instance variable for table
+    private TableView<TimeRecord> timeTable;
+    private TableView<PayrollRecord> payrollTable;
 
     public ClockInOutScreen(Employee employee) {
         this.employee = employee;
@@ -64,13 +66,13 @@ public class ClockInOutScreen {
                     return;
                 }
 
-                // Save time record
+                // Save time record and payroll
                 TimeRecord record = new TimeRecord(employee.getId(), clockIn, clockOut);
-                DBUtil.saveTimeRecord(record);
+                DBUtil.saveTimeRecord(record, employee.getHourlyRate());
                 AlertUtil.showInfo("Success", "Time record saved successfully!");
                 clockInField.clear();
                 clockOutField.clear();
-                refreshTable(); // Call refreshTable to update table
+                refreshTables();
             } catch (Exception ex) {
                 AlertUtil.showError("Error", "Invalid time format or database error: " + ex.getMessage());
             }
@@ -80,30 +82,47 @@ public class ClockInOutScreen {
         formBox.setAlignment(Pos.CENTER);
         formBox.setPadding(new Insets(20));
 
-        // Table for time records
-        table = new TableView<>();
+        // Time Record Table
+        timeTable = new TableView<>();
         TableColumn<TimeRecord, LocalDateTime> clockInCol = new TableColumn<>("Clock-In");
         clockInCol.setCellValueFactory(new PropertyValueFactory<>("clockIn"));
         TableColumn<TimeRecord, LocalDateTime> clockOutCol = new TableColumn<>("Clock-Out");
         clockOutCol.setCellValueFactory(new PropertyValueFactory<>("clockOut"));
         TableColumn<TimeRecord, Double> hoursCol = new TableColumn<>("Hours Worked");
         hoursCol.setCellValueFactory(new PropertyValueFactory<>("hoursWorked"));
-        table.getColumns().addAll(clockInCol, clockOutCol, hoursCol);
+        timeTable.getColumns().addAll(clockInCol, clockOutCol, hoursCol);
+
+        // Payroll Table
+        payrollTable = new TableView<>();
+        TableColumn<PayrollRecord, Integer> payrollIdCol = new TableColumn<>("Payroll ID");
+        payrollIdCol.setCellValueFactory(new PropertyValueFactory<>("id"));
+        TableColumn<PayrollRecord, Integer> timeRecordIdCol = new TableColumn<>("Time Record ID");
+        timeRecordIdCol.setCellValueFactory(new PropertyValueFactory<>("timeRecordId"));
+        TableColumn<PayrollRecord, Double> payrollHoursCol = new TableColumn<>("Hours Worked");
+        payrollHoursCol.setCellValueFactory(new PropertyValueFactory<>("hoursWorked"));
+        TableColumn<PayrollRecord, Double> amountCol = new TableColumn<>("Amount Paid");
+        amountCol.setCellValueFactory(new PropertyValueFactory<>("amountPaid"));
+        payrollTable.getColumns().addAll(payrollIdCol, timeRecordIdCol, payrollHoursCol, amountCol);
 
         // Load initial data
-        refreshTable();
+        refreshTables();
 
-        VBox tableBox = new VBox(10, new Label("Your Time Records"), table);
-        tableBox.setPadding(new Insets(20));
+        VBox timeBox = new VBox(10, new Label("Your Time Records"), timeTable);
+        timeBox.setPadding(new Insets(20));
+        VBox payrollBox = new VBox(10, new Label("Your Payroll Records"), payrollTable);
+        payrollBox.setPadding(new Insets(20));
 
         // Layout
         view.setTop(formBox);
-        view.setCenter(tableBox);
+        view.setLeft(timeBox);
+        view.setCenter(payrollBox);
     }
 
-    private void refreshTable() {
-        List<TimeRecord> records = DBUtil.getTimeRecords(employee.getId());
-        table.setItems(FXCollections.observableArrayList(records));
+    private void refreshTables() {
+        List<TimeRecord> timeRecords = DBUtil.getTimeRecords(employee.getId());
+        timeTable.setItems(FXCollections.observableArrayList(timeRecords));
+        List<PayrollRecord> payrollRecords = DBUtil.getPayrollRecords(employee.getId());
+        payrollTable.setItems(FXCollections.observableArrayList(payrollRecords));
     }
 
     public BorderPane getView() {
