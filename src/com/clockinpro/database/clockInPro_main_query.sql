@@ -32,13 +32,8 @@ CREATE TABLE payroll (
 -- Add is_admin column to employees
 ALTER TABLE employees ADD is_admin BOOLEAN DEFAULT FALSE;
 
--- Insert sample data into employees
-INSERT INTO employees (username, password) VALUES
-('john_doe', '123'),
-('jane_smith', '456'),
-('mike_brown', '789');
 
--- Insert admin user
+-- Insert admin and user
 INSERT INTO employees (username, password, is_admin) VALUES
 ('john_doe', '123', False),
 ('jane_smith', '456', False),
