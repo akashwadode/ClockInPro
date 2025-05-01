@@ -31,20 +31,7 @@ public class LoginScreen {
 
     private void initializeUI() {
         // Logo
-        ImageView logoView = null;
-        try {
-            InputStream imageStream = getClass().getResourceAsStream("/images/logo.png");
-            if (imageStream == null) {
-                System.err.println("Warning: logo.png not found in resources/images/");
-            } else {
-                Image logoImage = new Image(imageStream);
-                logoView = new ImageView(logoImage);
-                logoView.setFitWidth(150);
-                logoView.setPreserveRatio(true);
-            }
-        } catch (Exception e) {
-            System.err.println("Error loading logo: " + e.getMessage());
-        }
+
 
         // Form
         Label usernameLabel = new Label("Username:");
@@ -76,9 +63,7 @@ public class LoginScreen {
         });
 
         VBox formBox = new VBox(10);
-        if (logoView != null) {
-            formBox.getChildren().add(logoView);
-        }
+
         formBox.getChildren().addAll(usernameLabel, usernameField, passwordLabel, passwordField, loginButton);
         formBox.setAlignment(Pos.CENTER);
         formBox.setPadding(new Insets(20));
